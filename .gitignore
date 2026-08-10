@@ -1,0 +1,36 @@
+# Build products and cloned upstream source
+.build/
+
+# Locally assembled or copied game trees
+Game/
+FSNRNUE*/
+fatereltanua_savedata/
+faterealtanua_savedata/
+
+# Proprietary Ultimate Edition data and Windows runtime
+*.xp3
+*.exe
+*.dll
+*.ico
+*.ksc
+*.ksd
+*.tjs.bak
+
+# Game-derived/generated media
+linux/icon_*.bmp
+*.bmp
+*.webp
+*.png
+*.jpg
+*.jpeg
+*.mp4
+*.mpg
+*.wav
+*.ogg
+*.ttf
+
+# Runtime logs, crashes, and editor/OS files
+*.log
+excepted/
+.DS_Store
+*~

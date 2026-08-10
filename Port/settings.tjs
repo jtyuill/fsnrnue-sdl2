@@ -1,0 +1,201 @@
+﻿(function()
+{
+    if (global.System.platformName !== "Linux")
+        return;
+
+    Scripts.eval("@set(USE_KRMEMPLUGIN=0)\n"
+        + "@set(USE_WUFFMPEG=0)\n"
+        + "@set(USE_KRMPV=0)\n"
+        + "@set(USE_KR_VARIOUS_PLUGINS=0)\n"
+        + "@set(USE_IMAGELOADER_REPLACEMENTS=0)\n"
+        + "@set(USE_LAYER_IMAGEFUNCTION_REPLACEMENTS=0)\n"
+        + "@set(USE_MENU_LAYER=1)");
+
+    global.linuxMenuCaption = function(caption)
+    {
+        if (typeof(caption) !== "String")
+            return caption;
+
+        return caption.replace(/\(&[^)]*\)/g, "").replace(/&/g, "");
+    };
+
+    global.updateLinuxMenuActiveHeight = function(root)
+    {
+        var height = root.menu_active_base_height;
+        var stack = root.menu_stack;
+        for (var i = 0; i < stack.count; i += 1)
+        {
+            var item = stack[i];
+            if (typeof(item) === "Object" && isvalid(item))
+                height = global.Math.max(height, item.top + item.height);
+        }
+
+        root.menu_active_height = height;
+        return height;
+    };
+
+
+    global.installLinuxMenuStyle = function()
+    {
+        if (typeof(global.MenuItemChildLayer) !== "Object"
+            || typeof(global.kag) !== "Object"
+            || typeof(global.kag.menu_layer) !== "Object")
+        {
+            global.Debug.notice("[Linux] Menu layer class is unavailable; using upstream layout.");
+            return;
+        }
+
+        global.Scripts.eval(
+            "global.MenuItemChildLayer_linux_original = global.MenuItemChildLayer;\n"
+            + "class MenuItemChildLayer_linux_override extends global.MenuItemChildLayer_linux_original\n"
+            + "{\n"
+            + "\tvar display_caption;\n"
+            + "\tvar menu_padding_x;\n"
+            + "\tvar menu_padding_y;\n"
+            + "\n"
+            + "\tfunction MenuItemChildLayer_linux_override()\n"
+            + "\t{\n"
+            + "\t\tsuper.MenuItemChildLayer(...);\n"
+            + "\t\tvar scale = global.Math.max(1.0, global.Math.min(\n"
+            + "\t\t\tthis.window.primaryLayer.width / 800.0,\n"
+            + "\t\t\tthis.window.primaryLayer.height / 600.0));\n"
+            + "\t\tthis.font.height = int(this.font.height * scale + 0.5);\n"
+            + "\t\tthis.menu_padding_x = int(6 * scale + 0.5);\n"
+            + "\t\tthis.menu_padding_y = int(2 * scale + 0.5);\n"
+            + "\t\tthis.display_caption = global.linuxMenuCaption(this.menu.caption);\n"
+            + "\t\tvar w = this.font.getTextWidth(this.display_caption) + this.menu_padding_x * 2;\n"
+            + "\t\tvar h = this.font.getTextHeight(this.display_caption) + this.menu_padding_y * 2;\n"
+            + "\t\tthis.setImageSize(w, h);\n"
+            + "\t\tthis.setSizeToImageSize();\n"
+            + "\t\tthis.drawState();\n"
+            + "\t\tthis.visible = true;\n"
+            + "\t}\n"
+            + "\n"
+            + "\tfunction MenuItemChildLayer()\n"
+            + "\t{\n"
+            + "\t\tthis.MenuItemChildLayer_linux_override(...);\n"
+            + "\t}\n"
+            + "\n"
+            + "\tfunction drawState(hovered=false)\n"
+            + "\t{\n"
+            + "\t\tthis.face = global.dfOpaque;\n"
+            + "\t\tthis.fillRect(0, 0, this.imageWidth, this.imageHeight,\n"
+            + "\t\t\t0x00000000 | (hovered ? 0xFF000080 : 0)\n"
+            + "\t\t\t| ((this.menu.checked && !(this.menu.radio)) ? 0xFF008000 : 0)\n"
+            + "\t\t\t| ((this.menu.checked && (this.menu.radio)) ? 0xFF800000 : 0));\n"
+            + "\t\tthis.face = global.dfAlpha;\n"
+            + "\t\tvar caption = this.display_caption;\n"
+            + "\t\tvar padding_x = this.menu_padding_x;\n"
+            + "\t\tvar padding_y = this.menu_padding_y;\n"
+            + "\t\tif (caption === void)\n"
+            + "\t\t{\n"
+            + "\t\t\tcaption = global.linuxMenuCaption(this.menu.caption);\n"
+            + "\t\t\tpadding_x = 0;\n"
+            + "\t\t\tpadding_y = 0;\n"
+            + "\t\t}\n"
+            + "\t\tthis.drawText(padding_x, padding_y, caption,\n"
+            + "\t\t\t(this.menu.enabled ? 0xFFFFFF : 0x808080), 255, true);\n"
+            + "\t}\n"
+            + "\n"
+            + "\tfunction onClick()\n"
+            + "\t{\n"
+            + "\t\tif (!this.menu.enabled)\n"
+            + "\t\t\treturn;\n"
+            + "\t\tif (this.menu.children.count === 0)\n"
+            + "\t\t{\n"
+            + "\t\t\tthis.menu.onClick();\n"
+            + "\t\t\tthis.root.hide(true);\n"
+            + "\t\t}\n"
+            + "\t}\n"
+            + "}\n"
+            + "global.MenuItemChildLayer = global.MenuItemChildLayer_linux_override;\n");
+
+        var root = global.kag.menu_layer;
+        root.linux_hide_original = root.hide;
+        root.hide = function(force=false)
+        {
+            if (!force && this.visible)
+            {
+                var active_height = global.updateLinuxMenuActiveHeight(this);
+                var scale = global.Math.max(1.0, global.Math.min(
+                    this.imageWidth / 800.0, this.imageHeight / 600.0));
+                var margin = int(12 * scale + 0.5);
+                var cursor_x = this.window.primaryLayer.cursorX;
+                var cursor_y = this.window.primaryLayer.cursorY;
+
+                if (cursor_x >= 0 && cursor_x < this.imageWidth
+                    && cursor_y >= -margin && cursor_y <= active_height + margin)
+                    return;
+            }
+
+            var result = (this.linux_hide_original incontextof this)();
+            this.menu_active_height = this.menu_active_base_height;
+            return result;
+        };
+
+        global.Debug.notice("[Linux] Scaled menu layer enabled.");
+    };
+
+    global.linuxMenuStyleTrigger = new global.AsyncTrigger(global.installLinuxMenuStyle, "");
+    global.linuxMenuStyleTrigger.trigger();
+
+    global.installLinuxRouteIcons = function()
+    {
+        if (typeof(global.System.setApplicationIcon) !== "Object")
+        {
+            global.Debug.notice("[Linux] Native window icon support is unavailable.");
+            return;
+        }
+
+        var basepath = global.System.getArgument("-basepath");
+        if (typeof(basepath) !== "String" || basepath === "")
+        {
+            global.Debug.notice("[Linux] Window icon base path is unavailable.");
+            return;
+        }
+        if (basepath.charAt(basepath.length - 1) !== "/")
+            basepath += "/";
+        global.linuxIconBasePath = basepath;
+
+        global.setRouteIcon = function(route)
+        {
+            var icon_route = route === global.commonRoute ? global.fateRoute : route;
+            if (icon_route === global.fateRoute)
+                icon_route = "FATE";
+            var icon_path = global.linuxIconBasePath + "linux/icon_" + icon_route + ".bmp";
+            if (!global.System.setApplicationIcon(icon_path))
+                global.Debug.notice("[Linux] Cannot load window icon: " + icon_path);
+        };
+
+        if (typeof(global.setRouteIconAutomatically) === "Object")
+            global.setRouteIconAutomatically();
+        else
+            global.setRouteIcon(global.fateRoute);
+
+        global.Debug.notice("[Linux] Route window icon enabled.");
+    };
+
+    global.linuxRouteIconTrigger = new global.AsyncTrigger(global.installLinuxRouteIcons, "");
+    global.linuxRouteIconTrigger.trigger();
+
+    global.Plugins.linux_native_plugins = %[
+        "extrans.dll" => true,
+        "fstat.dll" => true,
+        "krglhwebp.dll" => true,
+        "wutcwf.dll" => true,
+        "wuvorbis.dll" => true
+    ];
+
+    global.Window.exSystemMenu = void;
+    global.Plugins.link_linux_original = global.Plugins.link;
+    global.Plugins.link = function(storage)
+    {
+        if (global.Plugins.linux_native_plugins[storage] === true)
+            return global.Plugins.link_linux_original(storage);
+
+        global.Debug.notice("[Linux] Windows-only plugin skipped: " + storage);
+        return false;
+    };
+
+    global.Plugins.link("krglhwebp.dll");
+})()

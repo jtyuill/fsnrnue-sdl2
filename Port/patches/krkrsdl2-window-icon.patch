@@ -1,0 +1,104 @@
+diff --git a/src/core/base/sdl2/SystemImpl.cpp b/src/core/base/sdl2/SystemImpl.cpp
+index cb84cd8..067ae6e 100644
+--- a/src/core/base/sdl2/SystemImpl.cpp
++++ b/src/core/base/sdl2/SystemImpl.cpp
+@@ -29,6 +29,7 @@
+ #include "DInputMgn.h"
+ 
+ #include "Application.h"
++#include "SDLApplication.h"
+ #include "TVPScreen.h"
+ #if 0
+ #include "CompatibleNativeFuncs.h"
+@@ -941,6 +942,19 @@ TJS_BEGIN_NATIVE_METHOD_DECL(/*func. name*/shellExecute)
+ TJS_END_NATIVE_STATIC_METHOD_DECL_OUTER(/*object to register*/cls,
+ 	/*func. name*/shellExecute)
+ //----------------------------------------------------------------------
++TJS_BEGIN_NATIVE_METHOD_DECL(/*func. name*/setApplicationIcon)
++{
++	if(numparams < 1) return TJS_E_BADPARAMCOUNT;
++
++	ttstr name = *param[0];
++	bool res = TVPSetApplicationIcon(name);
++
++	if(result) *result = (tjs_int)res;
++	return TJS_S_OK;
++}
++TJS_END_NATIVE_STATIC_METHOD_DECL_OUTER(/*object to register*/cls,
++	/*func. name*/setApplicationIcon)
++//----------------------------------------------------------------------
+ TJS_BEGIN_NATIVE_METHOD_DECL(/*func. name*/system)
+ {
+ 	if(numparams < 1) return TJS_E_BADPARAMCOUNT;
+diff --git a/src/core/sdl2/SDLApplication.cpp b/src/core/sdl2/SDLApplication.cpp
+index 48c7820..b47cc92 100644
+--- a/src/core/sdl2/SDLApplication.cpp
++++ b/src/core/sdl2/SDLApplication.cpp
+@@ -2,6 +2,7 @@
+ /* Copyright (c) Kirikiri SDL2 Developers */
+ 
+ #include "tjsCommHead.h"
++#include "SDLApplication.h"
+ #include "WindowImpl.h"
+ #include "VirtualKey.h"
+ #include "Application.h"
+@@ -547,6 +548,8 @@ protected:
+ public:
+ 	TVPWindowWindow(tTJSNI_Window *w);
+ 	virtual ~TVPWindowWindow();
++	bool SetIcon(SDL_Surface *icon);
++	TVPWindowWindow *GetPreviousWindow() const { return _prevWindow; }
+ 	/* Called from tTJSNI_Window */
+ 	virtual void SetPaintBoxSize(tjs_int w, tjs_int h) override;
+ 	void TranslateWindowToDrawArea(int &x, int &y);
+@@ -708,6 +711,40 @@ public:
+ 	bool window_receive_event_input(SDL_Event event);
+ };
+ 
++bool TVPWindowWindow::SetIcon(SDL_Surface *icon)
++{
++	if (!this->window || !icon)
++	{
++		return false;
++	}
++	SDL_SetWindowIcon(this->window, icon);
++	return true;
++}
++
++bool TVPSetApplicationIcon(const ttstr &name)
++{
++	tjs_string name_utf16 = name.AsStdString();
++	std::string name_utf8;
++	if (!TVPUtf16ToUtf8(name_utf8, name_utf16))
++	{
++		return false;
++	}
++
++	SDL_Surface *icon = SDL_LoadBMP(name_utf8.c_str());
++	if (!icon)
++	{
++		return false;
++	}
++
++	bool applied = false;
++	for (TVPWindowWindow *window = _lastWindowWindow; window; window = window->GetPreviousWindow())
++	{
++		applied = window->SetIcon(icon) || applied;
++	}
++	SDL_FreeSurface(icon);
++	return applied;
++}
++
+ TVPWindowWindow::TVPWindowWindow(tTJSNI_Window *w)
+ {
+ 	this->window = nullptr;
+diff --git a/src/core/sdl2/SDLApplication.h b/src/core/sdl2/SDLApplication.h
+index 4995e1d..fd54b01 100644
+--- a/src/core/sdl2/SDLApplication.h
++++ b/src/core/sdl2/SDLApplication.h
+@@ -10,3 +10,5 @@ extern void krkrsdl2_convert_set_args(int argc, char **argv);
+ extern bool krkrsdl2_init_platform(void);
+ extern void krkrsdl2_run_main_loop(void);
+ extern void krkrsdl2_cleanup(void);
++
++extern bool TVPSetApplicationIcon(const ttstr &name);
