@@ -57,8 +57,8 @@ library path from `<nixpkgs>`. ImageMagick is still needed while installing.
 ## Install using Ultimate Edition as the base
 
 ```sh
-git clone https://github.com/jtyuill/fsnrue-linux.git
-cd fsnrue-linux
+git clone https://github.com/jtyuill/fsnrue-sdl2.git
+cd fsnrue-sdl2
 
 ./install.sh "/path/to/Fate stay night Realta Nua Ultimate Edition"
 ```
