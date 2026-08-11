@@ -8,8 +8,6 @@ The platform installer adds a native runtime beside the existing Windows runtime
 it does not copy, modify, or delete the game's XP3 archives, executables,
 configuration, or save data.
 
-## Status
-
 The game should work identical to the Windows binary, however videos are currently broken on both Linux and macOS.
 
 This project does not mess with existing game files at all, though it is good practice to back up your saves just in case.
