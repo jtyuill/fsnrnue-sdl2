@@ -18,7 +18,7 @@ This project does not mess with existing game files at all, though it is good pr
 
 ## Native window and menu
 
-The he game runs in a native resizable window with the
+The game runs in a native resizable window with the
 platform title bar and window controls. Because Kirikiri SDL2 does not provide
 the Windows system-menu API used by Ultimate Edition, the compatibility overlay
 enables the game's in-window menu instead. The **System**, **Display**,
