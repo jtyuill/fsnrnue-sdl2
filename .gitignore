@@ -29,6 +29,9 @@ linux/icon_*.bmp
 *.ogg
 *.ttf
 
+# README screenshot (user-authored, intentionally tracked)
+!titlebar.png
+
 # Runtime logs, crashes, and editor/OS files
 *.log
 excepted/
