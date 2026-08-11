@@ -1,0 +1,35 @@
+diff --git a/wutcwf/WUMainUnit.cpp b/wutcwf/WUMainUnit.cpp
+index cbc1093..5e71feb 100644
+--- a/wutcwf/WUMainUnit.cpp
++++ b/wutcwf/WUMainUnit.cpp
+@@ -95,10 +95,18 @@ static int ima_step_size [89] =
+ } ;
+ //---------------------------------------------------------------------------
+ //---------------------------------------------------------------------------
+-static void strcpy_limit(TSS_LPWSTR dest, const TSS_LPWSTR  src, int n)
++static void strcpy_limit(TSS_LPWSTR dest, const TSS_LPWSTR src, int n)
+ {
+-	TJS_strncpy(dest, src, n-1);
+-	dest[n-1] = '\0';
++	if(n <= 0) return;
++	int i = 0;
++	for(; i < n - 1 && src[i] != 0; ++i)
++		dest[i] = src[i];
++	dest[i] = 0;
++}
++//---------------------------------------------------------------------------
++static void strcpy_unbounded(TSS_LPWSTR dest, const TSS_LPWSTR src)
++{
++	while((*dest++ = *src++) != 0) {}
+ }
+ //---------------------------------------------------------------------------
+ static ITSSStorageProvider *StorageProvider = NULL;
+@@ -229,7 +237,7 @@ HRESULT STDMETHODCALLTYPE TCWFModule::GetSupportExts(TSS_ULONG index, TSS_LPWSTR
+ 												TSS_LPWSTR buf, TSS_ULONG buflen )
+ {
+ 	if(index >= 1) return S_FALSE;
+-	TJS_strcpy(mediashortname, TJS_W("TCWF ファイル"));
++	strcpy_unbounded(mediashortname, TJS_W("TCWF ファイル"));
+ 	strcpy_limit(buf, TJS_W(".tcw"), buflen);
+ 	return S_OK;
+ }

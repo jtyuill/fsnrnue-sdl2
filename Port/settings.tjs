@@ -1,6 +1,7 @@
 ﻿(function()
 {
-    if (global.System.platformName !== "Linux")
+    var platformName = global.System.platformName;
+    if (platformName !== "Linux" && platformName !== "Mac OS X")
         return;
 
     Scripts.eval("@set(USE_KRMEMPLUGIN=0)\n"
@@ -11,7 +12,7 @@
         + "@set(USE_LAYER_IMAGEFUNCTION_REPLACEMENTS=0)\n"
         + "@set(USE_MENU_LAYER=1)");
 
-    global.linuxMenuCaption = function(caption)
+    global.portMenuCaption = function(caption)
     {
         if (typeof(caption) !== "String")
             return caption;
@@ -19,7 +20,7 @@
         return caption.replace(/\(&[^)]*\)/g, "").replace(/&/g, "");
     };
 
-    global.updateLinuxMenuActiveHeight = function(root)
+    global.updatePortMenuActiveHeight = function(root)
     {
         var height = root.menu_active_base_height;
         var stack = root.menu_stack;
@@ -35,25 +36,25 @@
     };
 
 
-    global.installLinuxMenuStyle = function()
+    global.installPortMenuStyle = function()
     {
         if (typeof(global.MenuItemChildLayer) !== "Object"
             || typeof(global.kag) !== "Object"
             || typeof(global.kag.menu_layer) !== "Object")
         {
-            global.Debug.notice("[Linux] Menu layer class is unavailable; using upstream layout.");
+            global.Debug.notice("[Native] Menu layer class is unavailable; using upstream layout.");
             return;
         }
 
         global.Scripts.eval(
-            "global.MenuItemChildLayer_linux_original = global.MenuItemChildLayer;\n"
-            + "class MenuItemChildLayer_linux_override extends global.MenuItemChildLayer_linux_original\n"
+            "global.MenuItemChildLayer_port_original = global.MenuItemChildLayer;\n"
+            + "class MenuItemChildLayer_port_override extends global.MenuItemChildLayer_port_original\n"
             + "{\n"
             + "\tvar display_caption;\n"
             + "\tvar menu_padding_x;\n"
             + "\tvar menu_padding_y;\n"
             + "\n"
-            + "\tfunction MenuItemChildLayer_linux_override()\n"
+            + "\tfunction MenuItemChildLayer_port_override()\n"
             + "\t{\n"
             + "\t\tsuper.MenuItemChildLayer(...);\n"
             + "\t\tvar scale = global.Math.max(1.0, global.Math.min(\n"
@@ -62,7 +63,7 @@
             + "\t\tthis.font.height = int(this.font.height * scale + 0.5);\n"
             + "\t\tthis.menu_padding_x = int(6 * scale + 0.5);\n"
             + "\t\tthis.menu_padding_y = int(2 * scale + 0.5);\n"
-            + "\t\tthis.display_caption = global.linuxMenuCaption(this.menu.caption);\n"
+            + "\t\tthis.display_caption = global.portMenuCaption(this.menu.caption);\n"
             + "\t\tvar w = this.font.getTextWidth(this.display_caption) + this.menu_padding_x * 2;\n"
             + "\t\tvar h = this.font.getTextHeight(this.display_caption) + this.menu_padding_y * 2;\n"
             + "\t\tthis.setImageSize(w, h);\n"
@@ -73,7 +74,7 @@
             + "\n"
             + "\tfunction MenuItemChildLayer()\n"
             + "\t{\n"
-            + "\t\tthis.MenuItemChildLayer_linux_override(...);\n"
+            + "\t\tthis.MenuItemChildLayer_port_override(...);\n"
             + "\t}\n"
             + "\n"
             + "\tfunction drawState(hovered=false)\n"
@@ -89,7 +90,7 @@
             + "\t\tvar padding_y = this.menu_padding_y;\n"
             + "\t\tif (caption === void)\n"
             + "\t\t{\n"
-            + "\t\t\tcaption = global.linuxMenuCaption(this.menu.caption);\n"
+            + "\t\t\tcaption = global.portMenuCaption(this.menu.caption);\n"
             + "\t\t\tpadding_x = 0;\n"
             + "\t\t\tpadding_y = 0;\n"
             + "\t\t}\n"
@@ -108,15 +109,15 @@
             + "\t\t}\n"
             + "\t}\n"
             + "}\n"
-            + "global.MenuItemChildLayer = global.MenuItemChildLayer_linux_override;\n");
+            + "global.MenuItemChildLayer = global.MenuItemChildLayer_port_override;\n");
 
         var root = global.kag.menu_layer;
-        root.linux_hide_original = root.hide;
+        root.port_hide_original = root.hide;
         root.hide = function(force=false)
         {
             if (!force && this.visible)
             {
-                var active_height = global.updateLinuxMenuActiveHeight(this);
+                var active_height = global.updatePortMenuActiveHeight(this);
                 var scale = global.Math.max(1.0, global.Math.min(
                     this.imageWidth / 800.0, this.imageHeight / 600.0));
                 var margin = int(12 * scale + 0.5);
@@ -128,43 +129,43 @@
                     return;
             }
 
-            var result = (this.linux_hide_original incontextof this)();
+            var result = (this.port_hide_original incontextof this)();
             this.menu_active_height = this.menu_active_base_height;
             return result;
         };
 
-        global.Debug.notice("[Linux] Scaled menu layer enabled.");
+        global.Debug.notice("[Native] Scaled menu layer enabled.");
     };
 
-    global.linuxMenuStyleTrigger = new global.AsyncTrigger(global.installLinuxMenuStyle, "");
-    global.linuxMenuStyleTrigger.trigger();
+    global.portMenuStyleTrigger = new global.AsyncTrigger(global.installPortMenuStyle, "");
+    global.portMenuStyleTrigger.trigger();
 
-    global.installLinuxRouteIcons = function()
+    global.installPortRouteIcons = function()
     {
         if (typeof(global.System.setApplicationIcon) !== "Object")
         {
-            global.Debug.notice("[Linux] Native window icon support is unavailable.");
+            global.Debug.notice("[Native] Native window icon support is unavailable.");
             return;
         }
 
         var basepath = global.System.getArgument("-basepath");
         if (typeof(basepath) !== "String" || basepath === "")
         {
-            global.Debug.notice("[Linux] Window icon base path is unavailable.");
+            global.Debug.notice("[Native] Window icon base path is unavailable.");
             return;
         }
         if (basepath.charAt(basepath.length - 1) !== "/")
             basepath += "/";
-        global.linuxIconBasePath = basepath;
+        global.portIconBasePath = basepath;
 
         global.setRouteIcon = function(route)
         {
             var icon_route = route === global.commonRoute ? global.fateRoute : route;
             if (icon_route === global.fateRoute)
                 icon_route = "FATE";
-            var icon_path = global.linuxIconBasePath + "linux/icon_" + icon_route + ".bmp";
+            var icon_path = global.portIconBasePath + "linux/icon_" + icon_route + ".bmp";
             if (!global.System.setApplicationIcon(icon_path))
-                global.Debug.notice("[Linux] Cannot load window icon: " + icon_path);
+                global.Debug.notice("[Native] Cannot load window icon: " + icon_path);
         };
 
         if (typeof(global.setRouteIconAutomatically) === "Object")
@@ -172,13 +173,16 @@
         else
             global.setRouteIcon(global.fateRoute);
 
-        global.Debug.notice("[Linux] Route window icon enabled.");
+        global.Debug.notice("[Native] Route window icon enabled.");
     };
 
-    global.linuxRouteIconTrigger = new global.AsyncTrigger(global.installLinuxRouteIcons, "");
-    global.linuxRouteIconTrigger.trigger();
+    if (platformName === "Linux")
+    {
+        global.portRouteIconTrigger = new global.AsyncTrigger(global.installPortRouteIcons, "");
+        global.portRouteIconTrigger.trigger();
+    }
 
-    global.Plugins.linux_native_plugins = %[
+    global.Plugins.port_native_plugins = %[
         "extrans.dll" => true,
         "fstat.dll" => true,
         "krglhwebp.dll" => true,
@@ -187,13 +191,17 @@
     ];
 
     global.Window.exSystemMenu = void;
-    global.Plugins.link_linux_original = global.Plugins.link;
+    global.Plugins.link_port_original = global.Plugins.link;
     global.Plugins.link = function(storage)
     {
-        if (global.Plugins.linux_native_plugins[storage] === true)
-            return global.Plugins.link_linux_original(storage);
+        if (global.Plugins.port_native_plugins[storage] === true)
+        {
+            var result = global.Plugins.link_port_original(storage);
+            global.Debug.notice("[Native] Native plugin loaded: " + storage);
+            return result;
+        }
 
-        global.Debug.notice("[Linux] Windows-only plugin skipped: " + storage);
+        global.Debug.notice("[Native] Windows-only plugin skipped: " + storage);
         return false;
     };
 
