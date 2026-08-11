@@ -14,11 +14,13 @@ The game should work identical to the Windows binary, however videos are current
 
 This project is in its infancy. Please contribute by opening an issue or PR!
 
+This project is also currently untested on 
+
 ## Requirements
 
 - An existing Ultimate Edition installation containing `patch.xp3`, `data.xp3`, `etc.xp3`, `rule.xp3`, `config.ksc`, `Fate.exe` or `Fate64.exe`, and the three `icon_*.ico` files.
-- Linux: x86-64 Linux, ImageMagick (`magick`) for installation, and the host's normal desktop graphics/audio libraries.
-- macOS: 10.14 or newer on Intel or Apple Silicon; the installers use built-in system tools.
+- Any modern version of Linux and macOS
+- **Note: Intel Mac is currently untested but should work. Please open an issue if you are experiencing problems.**
 
 ## Install using Ultimate Edition as the base
 
