@@ -12,7 +12,9 @@ The game should work identical to the Windows binary, however videos are current
 
 This project does not mess with existing game files at all, though it is good practice to back up your saves just in case.
 
-This project is in its infancy. Please contribute by opening an issue or PR!
+There will likely be some issues. Please contribute by opening an issue or PR!
+
+**This project was built with Ultimate Edition `v1.1.4`. It seems `v1.1.5` is the latest version, but is generally harder to find on the internet.**
 
 ## Requirements
 
