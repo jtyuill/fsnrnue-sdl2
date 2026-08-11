@@ -12,13 +12,13 @@ The game should work identical to the Windows binary, however videos are current
 
 This project does not mess with existing game files at all, though it is good practice to back up your saves just in case.
 
-There will likely be some issues. Please contribute by opening an issue or PR!
+**This project is in its infancy**, and there will be some issues. Please contribute by opening an issue or PR!
 
-**This project was built with Ultimate Edition `v1.1.4`. It seems `v1.1.5` is the latest version, but is generally harder to find on the internet.**
+**This project was built with Ultimate Edition `v1.1.4`. It seems `v1.1.5` is the latest version, but is harder to find on the internet.**
 
 ## Native window and menu
 
-On Linux and macOS, the game runs in a native resizable window with the
+The he game runs in a native resizable window with the
 platform title bar and window controls. Because Kirikiri SDL2 does not provide
 the Windows system-menu API used by Ultimate Edition, the compatibility overlay
 enables the game's in-window menu instead. The **System**, **Display**,
