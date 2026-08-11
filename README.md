@@ -17,8 +17,8 @@ This project is in its infancy. Please contribute by opening an issue or PR!
 ## Requirements
 
 - An existing Ultimate Edition installation containing `patch.xp3`, `data.xp3`, `etc.xp3`, `rule.xp3`, `config.ksc`, `Fate.exe` or `Fate64.exe`, and the three `icon_*.ico` files.
-- Linux: x86-64, Bash, coreutils, ImageMagick (`magick`), and standard C++ and desktop graphics/audio libraries.
-- macOS: 10.14 or newer on Intel or Apple Silicon, with the built-in Bash, `install`, `sips`, and `iconutil`.
+- Linux: x86-64 Linux, ImageMagick (`magick`) for installation, and the host's normal desktop graphics/audio libraries.
+- macOS: 10.14 or newer on Intel or Apple Silicon; the installers use built-in system tools.
 
 ## Install using Ultimate Edition as the base
 
