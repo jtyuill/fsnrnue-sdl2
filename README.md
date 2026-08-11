@@ -29,7 +29,7 @@ game window, with sizing adjusted for the current window scale.
 
 ## Requirements
 
-- An existing Ultimate Edition installation containing `patch.xp3`, `data.xp3`, `etc.xp3`, `rule.xp3`, `config.ksc`, `Fate.exe` or `Fate64.exe`, and the three `icon_*.ico` files.
+- An existing Ultimate Edition installation containing `patch.xp3`, `data.xp3`, `etc.xp3`, `rule.xp3`, `Fate.exe` or `Fate64.exe`, and the three `icon_*.ico` files.
 - Any modern version of Linux and macOS
 - **Note: Intel Mac is currently untested but should work. Please open an issue if you are experiencing problems.**
 
@@ -99,8 +99,10 @@ open "$HOME/FSNRNUE114/FateMac.app" --args -forcelog -window
 Re-run `install-mac.sh` after updating the checkout. It idempotently replaces
 only its own launcher, `macos/` runtime files, and `FateMac.app`.
 
-On both platforms, saves remain in `faterealtanua_savedata/` beside the game
-archives, matching the Ultimate Edition `config.ksc` setting.
+On first launch, Ultimate Edition prompts for the save location. Canceling that
+prompt keeps `faterealtanua_savedata/` beside the game archives. The resulting
+per-install `config.ksc` is not part of a fresh Ultimate Edition installation
+and is not required by either platform installer.
 
 
 ## Legal

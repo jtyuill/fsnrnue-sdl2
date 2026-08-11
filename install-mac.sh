@@ -18,7 +18,7 @@ for command_name in install sips iconutil; do
     command -v "$command_name" >/dev/null 2>&1 || die "missing required command: $command_name"
 done
 
-for required in patch.xp3 data.xp3 etc.xp3 rule.xp3 config.ksc \
+for required in patch.xp3 data.xp3 etc.xp3 rule.xp3 \
     icon_FATE.ico icon_UBW.ico icon_HF.ico; do
     [[ -f "$game_dir/$required" ]] || die "Ultimate Edition base is missing: $required"
 done
