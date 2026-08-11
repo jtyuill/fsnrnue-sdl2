@@ -1,8 +1,7 @@
-# Fate/stay night Realta Nua Ultimate Edition — native Linux and macOS
+# Fate/stay night Realta Nua Ultimate Edition SDL2 for Linux and macOS
 
-Run **Fate/stay night Realta Nua Ultimate Edition** with a native
-[Kirikiri SDL2](https://github.com/krkrsdl2/krkrsdl2) runtime on Linux or
-macOS. No Wine and no proprietary game data in this repository.
+This project runs Fate/stay night **Realta Nua Ultimate Edition** (NOT the Steam Remaster) with the
+[Kirikiri SDL2](https://github.com/krkrsdl2/krkrsdl2) runtime on Linux or macOS.
 
 You must provide an existing Ultimate Edition installation. No Ultimate Edition game files are redistributed by this repository.
 The platform installer adds a native runtime beside the existing Windows runtime;
@@ -11,26 +10,9 @@ configuration, or save data.
 
 ## Status
 
-The Linux port is tested with Ultimate Edition 1.1.4 on x86-64 Linux. Its
-exercised paths include:
+The game should work identical to the Windows binary, however videos are currently broken on both Linux and macOS.
 
-- title, configuration, route, patch, and nested menus
-- Fate/UBW/HF route-specific window icons
-- story rendering, mouse input, TCWF voice decoding, Ogg audio, and WebP images
-- portable saves and save thumbnails across a clean relaunch
-- optional patch archive selection and high-resolution menu scaling
-
-The macOS port is tested with Ultimate Edition 1.1.4 on Apple Silicon macOS.
-Both the terminal launcher and Finder application reach the game flow, accept
-input, load all five required native plugins, and use the existing portable
-save directory. The macOS engine and plugins contain both `arm64` and
-`x86_64` slices; Intel is verified in the artifacts but has not been exercised
-on Intel hardware. macOS uses a static Finder/Dock icon derived during
-installation instead of Linux's dynamic route-specific window icons.
-
-Kirikiri SDL2 does not implement Kirikiri's Windows `VideoOverlay` backend.
-Movie playback is therefore skipped; story, voice, music, images, menus, and
-saves continue to work.
+This project is in its infancy. Please contribute by opening an issue or PR!
 
 ## Requirements
 
@@ -40,7 +22,7 @@ Both ports require an existing Ultimate Edition directory containing at least
 
 ### Linux
 
-- x86-64 Linux
+- x64 Linux
 - Bash, coreutils, and ImageMagick (`magick`)
 - A normal C++ runtime and desktop graphics/audio libraries
 
@@ -147,86 +129,13 @@ only its own launcher, `macos/` runtime files, and `FateMac.app`.
 On both platforms, saves remain in `faterealtanua_savedata/` beside the game
 archives, matching the Ultimate Edition `config.ksc` setting.
 
-## Runtime provenance and refresh
-
-### Rebuild the Linux engine
-
-A prebuilt x86-64 Linux runtime is checked in for direct installation. To
-rebuild it from source instead:
-
-```sh
-./Port/build-engine.sh
-./install.sh "/path/to/Ultimate Edition"
-```
-
-`build-engine.sh` clones Kirikiri SDL2 at pinned commit
-`3f384a6869f6726929c777bdd0e0c871d5d5383d`, initializes its submodules,
-applies `Port/patches/krkrsdl2-window-icon.patch`, builds with CMake/Ninja, and
-replaces `Port/runtime/krkrsdl2`.
-
-Build dependencies include Git, CMake, Ninja, pkg-config, NASM, GCC/Clang, X11,
-XCB, Wayland protocols, libffi, libxkbcommon, libdecor, Mesa/OpenGL, PulseAudio,
-ALSA, JACK, Fontconfig, and FreeType development headers. On NixOS, the exact
-build environment used for the checked-in binary can be entered with:
-
-```sh
-nix-shell -p cmake ninja pkg-config nasm gcc libxcb libx11 libxext \
-  libxrandr libxcursor libxi libxfixes libxrender libxscrnsaver \
-  libxinerama libxxf86vm wayland wayland-scanner wayland-protocols \
-  libffi libxkbcommon libdecor mesa libglvnd pulseaudio alsa-lib \
-  libjack2 fontconfig freetype --run './Port/build-engine.sh'
-```
-
-### Refresh the macOS runtime
-
-The engine and four plugins are official universal release artifacts.
-`wutcwf.so` is a universal rebuild from its exact release source ref with the
-local import-stub fix recorded in `Port/THIRD-PARTY-NOTICES.md`. Fetch and
-verify the pinned archives with:
-
-```sh
-./Port/fetch-runtime-macos.sh
-./install-mac.sh "$HOME/FSNRNUE114"
-```
-
-The fetcher downloads into `.build/macos-runtime-downloads`, verifies every
-official archive and extracted binary by SHA-256, preserves only the
-hash-verified `wutcwf.so` rebuild, requires both `x86_64` and `arm64` slices,
-and only then replaces `Port/runtime-macos/`. A changed upstream `latest`
-artifact is rejected instead of being accepted as an implicit update.
-
-Build output, downloaded archives, and cloned sources stay under `.build/`,
-which is gitignored.
-
-## Repository layout
-
-```text
-FateLinux.sh                       relocatable Linux game launcher
-FateMac.sh                         relocatable macOS game launcher
-install.sh                         in-place Linux installer
-install-mac.sh                     in-place macOS and Finder-app installer
-Port/settings.tjs                  shared Linux/macOS compatibility overlay
-Port/runtime/krkrsdl2              native x86-64 Linux engine
-Port/runtime/plugin/*.so           required Linux Kirikiri plugins
-Port/runtime-macos/krkrsdl2        official universal macOS engine
-Port/runtime-macos/plugin/*.so     four official plugins plus rebuilt TCWF
-Port/build-engine.sh               reproducible Linux engine build
-Port/fetch-runtime-macos.sh        verified official macOS artifact fetcher
-Port/patches/                       local native engine/plugin changes
-Port/THIRD-PARTY-NOTICES.md        upstream provenance
-```
-
-Generated `linux/icon_*.bmp` and
-`FateMac.app/Contents/Resources/FateMac.icns` files remain only in your game
-directory because they are derived from proprietary Ultimate Edition assets.
 
 ## Legal
 
-- Ultimate Edition game files—including patches, translations, images, icons, audio, video, scripts, and XP3 archives—are not included or redistributed by this repository.
+- No game files of any kind are distributed by this repository.
+- This is an unofficial project not endorsed by TYPE-MOON or Beast's Lair. 
 - Scripts, documentation, and the compatibility overlay authored for this
   repository are MIT-licensed; see `LICENSE`.
 - The native runtime and plugins are third-party components with their own
   terms and provenance; see `Port/THIRD-PARTY-NOTICES.md`.
 
-This is an unofficial compatibility project and is not affiliated with
-TYPE-MOON, Notes, Aniplex, or the Ultimate Edition patch authors.
