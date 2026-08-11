@@ -16,47 +16,9 @@ This project is in its infancy. Please contribute by opening an issue or PR!
 
 ## Requirements
 
-Both ports require an existing Ultimate Edition directory containing at least
-`patch.xp3`, `data.xp3`, `etc.xp3`, `rule.xp3`, `config.ksc`, `Fate.exe` or
-`Fate64.exe`, and the three `icon_*.ico` files.
-
-### Linux
-
-- x64 Linux
-- Bash, coreutils, and ImageMagick (`magick`)
-- A normal C++ runtime and desktop graphics/audio libraries
-
-Runtime packages:
-
-#### Arch Linux
-
-```sh
-sudo pacman -S --needed imagemagick gcc-libs libx11 libxext libxrandr \
-  libxcursor libxi libxfixes libxrender wayland libxkbcommon libdecor \
-  mesa libpulse alsa-lib libjack2 fontconfig freetype2
-```
-
-#### Debian / Ubuntu
-
-```sh
-sudo apt install imagemagick libstdc++6 libx11-6 libxext6 libxrandr2 \
-  libxcursor1 libxi6 libxfixes3 libxrender1 libwayland-client0 \
-  libxkbcommon0 libdecor-0-0 libgl1 libpulse0 libasound2 \
-  libjack-jackd2-0 libfontconfig1 libfreetype6
-```
-
-On NixOS, `FateLinux.sh` detects `nix-ld` and constructs the required runtime
-library path from `<nixpkgs>`. ImageMagick is still needed while installing.
-
-### macOS
-
-- macOS 10.14 or newer
-- Intel or Apple Silicon
-- The macOS built-in Bash, `install`, `sips`, and `iconutil`
-
-The checked-in macOS runtime is universal and uses only macOS system libraries
-and frameworks. No Homebrew packages or dynamic-library path overrides are
-required.
+- An existing Ultimate Edition installation containing `patch.xp3`, `data.xp3`, `etc.xp3`, `rule.xp3`, `config.ksc`, `Fate.exe` or `Fate64.exe`, and the three `icon_*.ico` files.
+- Linux: x86-64, Bash, coreutils, ImageMagick (`magick`), and standard C++ and desktop graphics/audio libraries.
+- macOS: 10.14 or newer on Intel or Apple Silicon, with the built-in Bash, `install`, `sips`, and `iconutil`.
 
 ## Install using Ultimate Edition as the base
 
