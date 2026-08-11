@@ -91,7 +91,7 @@ body:
     attributes:
       label: Installation method
       options:
-        - install.sh
+        - install-linux.sh
         - Manual or other
     validations:
       required: true

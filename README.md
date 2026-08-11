@@ -43,7 +43,7 @@ cd fsnrnue-sdl2
 ### Linux
 
 ```sh
-./install.sh "/path/to/Fate stay night Realta Nua Ultimate Edition"
+./install-linux.sh "/path/to/Fate stay night Realta Nua Ultimate Edition"
 ```
 
 The Linux installer:
@@ -66,7 +66,7 @@ Extra Kirikiri arguments are forwarded, for example:
 ./FateLinux.sh -window
 ```
 
-Re-run `install.sh` after pulling a newer version of this repository. Keep a
+Re-run `install-linux.sh` after pulling a newer version of this repository. Keep a
 backup of your game directory as normal, although the installer only overwrites
 its own `FateLinux.sh` and `linux/` runtime files.
 

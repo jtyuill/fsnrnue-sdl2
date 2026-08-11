@@ -8,7 +8,7 @@ The checked-in runtime and plugins are third-party components. Preserve the prov
 
 ## Repository layout
 
-- `install.sh` — installs the Linux runtime into an existing Ultimate Edition directory.
+- `install-linux.sh` — installs the Linux runtime into an existing Ultimate Edition directory.
 - `install-mac.sh` — installs the macOS runtime and Finder app wrapper.
 - `FateLinux.sh` and `FateMac.sh` — relocatable launchers installed beside the game.
 - `Port/settings.tjs` — shared compatibility overlay.
@@ -32,7 +32,7 @@ The checked-in runtime and plugins are third-party components. Preserve the prov
 There is no checked-in automated test suite. At minimum, run shell syntax checks for every modified shell script:
 
 ```sh
-bash -n install.sh install-mac.sh FateLinux.sh FateMac.sh \
+bash -n install-linux.sh install-mac.sh FateLinux.sh FateMac.sh \
   Port/build-engine.sh Port/fetch-runtime-macos.sh
 ```
 
