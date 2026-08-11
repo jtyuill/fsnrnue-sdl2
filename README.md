@@ -4,8 +4,8 @@ Run **Fate/stay night Realta Nua Ultimate Edition** with a native
 [Kirikiri SDL2](https://github.com/krkrsdl2/krkrsdl2) runtime on Linux or
 macOS. No Wine and no proprietary game data in this repository.
 
-You must provide your own legally obtained Ultimate Edition installation. The
-platform installer adds a native runtime beside the existing Windows runtime;
+You must provide an existing Ultimate Edition installation. No Ultimate Edition game files are redistributed by this repository.
+The platform installer adds a native runtime beside the existing Windows runtime;
 it does not copy, modify, or delete the game's XP3 archives, executables,
 configuration, or save data.
 
@@ -222,9 +222,7 @@ directory because they are derived from proprietary Ultimate Edition assets.
 
 ## Legal
 
-- Ultimate Edition, its patches, translations, images, icons, audio, video,
-  scripts, and XP3 archives are not included. Supply a copy you are entitled to
-  use.
+- Ultimate Edition game files—including patches, translations, images, icons, audio, video, scripts, and XP3 archives—are not included or redistributed by this repository.
 - Scripts, documentation, and the compatibility overlay authored for this
   repository are MIT-licensed; see `LICENSE`.
 - The native runtime and plugins are third-party components with their own

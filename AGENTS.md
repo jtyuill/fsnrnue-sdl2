@@ -2,7 +2,7 @@
 
 ## Project
 
-This repository provides native Linux and macOS launchers and runtime files for **Fate/stay night Realta Nua Ultimate Edition**. It is a compatibility project: proprietary game archives, executables, assets, and save data are supplied by the user and must never be added to this repository.
+This repository provides native Linux and macOS launchers and runtime files for **Fate/stay night Realta Nua Ultimate Edition**. No Ultimate Edition game files are redistributed by this repository; proprietary game archives, executables, assets, and save data remain outside it.
 
 The checked-in runtime and plugins are third-party components. Preserve the provenance and licensing information in `Port/THIRD-PARTY-NOTICES.md` when changing or refreshing them.
 
@@ -36,6 +36,6 @@ bash -n install.sh install-mac.sh FateLinux.sh FateMac.sh \
   Port/build-engine.sh Port/fetch-runtime-macos.sh
 ```
 
-For installer or launcher changes, exercise the affected path with a legally obtained Ultimate Edition directory when available. Confirm that only project-owned files are created or replaced and that existing game data and saves remain untouched. For runtime changes, follow the rebuild or fetch instructions in `README.md` and verify the relevant Linux or macOS launch flow.
+For installer or launcher changes, exercise the affected path with an existing Ultimate Edition directory when available. Confirm that only project-owned files are created or replaced and that existing game data and saves remain untouched. For runtime changes, follow the rebuild or fetch instructions in `README.md` and verify the relevant Linux or macOS launch flow.
 
 Do not attach proprietary game files, archives, screenshots, or save data to issues or pull requests. Redact local paths and other personal information from logs before sharing them.

@@ -9,8 +9,7 @@ assignees: ""
 ## Before opening
 
 - [ ] I searched existing issues for duplicates.
-- [ ] I am using a legally obtained Ultimate Edition installation.
-- [ ] I have not attached proprietary game files, archives, save data, or unredacted game assets.
+- [ ] This report contains no proprietary game files, archives, save data, or unredacted game assets; this project does not redistribute them.
 
 ## Describe the bug
 
