@@ -1,0 +1,107 @@
+---
+name: Linux bug report
+description: Report a reproducible problem with the native Linux port
+title: "[Linux]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Thanks for reporting a Linux problem. Do not attach proprietary game
+        files, archives, save data, or unredacted game assets. Redact usernames
+        and local paths from logs.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before opening
+      options:
+        - label: I searched existing issues for duplicates.
+          required: true
+        - label: >-
+            I removed proprietary content and personal information from this
+            report.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: >-
+        Describe what happened, what you expected, and which route, menu, or
+        feature was affected.
+      placeholder: Describe the observed and expected behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: >-
+        Include the shortest reliable sequence that triggers the problem.
+      placeholder: |
+        1. Install or launch with ...
+        2. Open ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: input
+    id: linux_version
+    attributes:
+      label: Linux distribution and version
+      description: >-
+        Include the distribution release and, when relevant, the kernel
+        version.
+      placeholder: Ubuntu 24.04.1 LTS, kernel 6.8.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: architecture
+    attributes:
+      label: Architecture
+      options:
+        - x86-64
+        - Other or unknown
+    validations:
+      required: true
+
+  - type: input
+    id: repository_version
+    attributes:
+      label: Repository version
+      description: Provide the commit hash or release tag used for installation.
+      placeholder: 41fc0ee or a release tag
+    validations:
+      required: true
+
+  - type: input
+    id: ultimate_edition_version
+    attributes:
+      label: Ultimate Edition version
+      placeholder: 1.1.4, 1.1.5, or unknown
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation_method
+    attributes:
+      label: Installation method
+      options:
+        - install.sh
+        - Manual or other
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Logs and additional context
+      description: >-
+        Paste relevant terminal output and add any display server, desktop
+        environment, audio backend, or other context. Redact personal paths and
+        proprietary content.
+      render: shell
