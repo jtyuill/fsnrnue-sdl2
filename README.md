@@ -12,9 +12,9 @@ configuration, or save data.
 
 The game should work identical to the Windows binary, however videos are currently broken on both Linux and macOS.
 
-This project is in its infancy. Please contribute by opening an issue or PR!
+This project does not mess with existing game files at all, though it is good practice to back up your saves just in case.
 
-This project is also currently untested on 
+This project is in its infancy. Please contribute by opening an issue or PR!
 
 ## Requirements
 
@@ -40,9 +40,7 @@ The Linux installer:
 1. validates that the target looks like an Ultimate Edition installation;
 2. copies only this repository's native runtime, plugins, launcher, and
    compatibility overlay into `linux/` under the game directory;
-3. derives BMP window icons locally from **your** `icon_FATE.ico`,
-   `icon_UBW.ico`, and `icon_HF.ico`; and
-4. leaves every game archive and the existing save directory untouched.
+3. leaves every game archive and the existing save directory untouched.
 
 Play from any working directory:
 
