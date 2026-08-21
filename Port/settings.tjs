@@ -1,4 +1,4 @@
-﻿(function()
+(function()
 {
     var platformName = global.System.platformName;
     if (platformName !== "Linux" && platformName !== "Mac OS X")
@@ -17,7 +17,19 @@
         if (typeof(caption) !== "String")
             return caption;
 
-        return caption.replace(/\(&[^)]*\)/g, "").replace(/&/g, "");
+        return caption.replace(/\s*\(&[^)]*\)/g, "")
+            .replace(/&/g, "")
+            .replace(/\s+/g, " ")
+            .trim();
+    };
+
+    global.portMenuScale = function(window)
+    {
+        // One shared scale source so item sizing, margins, and hit-test
+        // bands always agree, whatever the window shape.
+        return global.Math.max(1.0, global.Math.min(
+            window.primaryLayer.width / 800.0,
+            window.primaryLayer.height / 600.0));
     };
 
     global.updatePortMenuActiveHeight = function(root)
@@ -38,15 +50,27 @@
 
     global.installPortMenuStyle = function()
     {
+        var installed_state = typeof(global.portMenuStyleInstalled);
+        if (installed_state !== "undefined" && installed_state !== "void")
+        {
+            global.Debug.notice("[Native] Scaled menu layer already installed.");
+            return true;
+        }
         if (typeof(global.MenuItemChildLayer) !== "Object"
             || typeof(global.kag) !== "Object"
             || typeof(global.kag.menu_layer) !== "Object")
         {
-            global.Debug.notice("[Native] Menu layer class is unavailable; using upstream layout.");
-            return;
+            return false; // caller decides whether to retry
         }
 
-        global.Scripts.eval(
+        var override_state = typeof(global.portMenuItemChildLayerOverride);
+        var already_wrapped = false;
+        if (override_state !== "undefined" && override_state !== "void")
+        {
+            if (global.MenuItemChildLayer === global.portMenuItemChildLayerOverride)
+                already_wrapped = true;
+        }
+        if (!already_wrapped) global.Scripts.eval(
             "global.MenuItemChildLayer_port_original = global.MenuItemChildLayer;\n"
             + "class MenuItemChildLayer_port_override extends global.MenuItemChildLayer_port_original\n"
             + "{\n"
@@ -57,9 +81,7 @@
             + "\tfunction MenuItemChildLayer_port_override()\n"
             + "\t{\n"
             + "\t\tsuper.MenuItemChildLayer(...);\n"
-            + "\t\tvar scale = global.Math.max(1.0, global.Math.min(\n"
-            + "\t\t\tthis.window.primaryLayer.width / 800.0,\n"
-            + "\t\t\tthis.window.primaryLayer.height / 600.0));\n"
+            + "\t\tvar scale = global.portMenuScale(this.window);\n"
             + "\t\tthis.font.height = int(this.font.height * scale + 0.5);\n"
             + "\t\tthis.menu_padding_x = int(6 * scale + 0.5);\n"
             + "\t\tthis.menu_padding_y = int(2 * scale + 0.5);\n"
@@ -79,12 +101,14 @@
             + "\n"
             + "\tfunction drawState(hovered=false)\n"
             + "\t{\n"
-            + "\t\tthis.face = global.dfOpaque;\n"
-            + "\t\tthis.fillRect(0, 0, this.imageWidth, this.imageHeight,\n"
-            + "\t\t\t0x00000000 | (hovered ? 0xFF000080 : 0)\n"
-            + "\t\t\t| ((this.menu.checked && !(this.menu.radio)) ? 0xFF008000 : 0)\n"
-            + "\t\t\t| ((this.menu.checked && (this.menu.radio)) ? 0xFF800000 : 0));\n"
+            // Translucent fills on the alpha face keep the game faintly
+            // visible behind the bar and avoid the hard opaque box.
             + "\t\tthis.face = global.dfAlpha;\n"
+            + "\t\tvar fill = 0x00000000;\n"
+            + "\t\tif (hovered) fill |= 0xB4000000 | 0x00008080;\n"
+            + "\t\tif (this.menu.checked && !(this.menu.radio)) fill |= 0x96000000 | 0x00008000;\n"
+            + "\t\tif (this.menu.checked && this.menu.radio) fill |= 0x96000000 | 0x00800000;\n"
+            + "\t\tthis.fillRect(0, 0, this.imageWidth, this.imageHeight, fill);\n"
             + "\t\tvar caption = this.display_caption;\n"
             + "\t\tvar padding_x = this.menu_padding_x;\n"
             + "\t\tvar padding_y = this.menu_padding_y;\n"
@@ -95,7 +119,8 @@
             + "\t\t\tpadding_y = 0;\n"
             + "\t\t}\n"
             + "\t\tthis.drawText(padding_x, padding_y, caption,\n"
-            + "\t\t\t(this.menu.enabled ? 0xFFFFFF : 0x808080), 255, true);\n"
+            + "\t\t\t(this.menu.enabled ? (hovered ? 0xFFFFFF : 0xE8E8E8) : 0x707070),\n"
+            + "\t\t\t255, true);\n"
             + "\t}\n"
             + "\n"
             + "\tfunction onClick()\n"
@@ -109,7 +134,8 @@
             + "\t\t}\n"
             + "\t}\n"
             + "}\n"
-            + "global.MenuItemChildLayer = global.MenuItemChildLayer_port_override;\n");
+            + "global.portMenuItemChildLayerOverride = MenuItemChildLayer_port_override;\n"
+            + "global.MenuItemChildLayer = global.portMenuItemChildLayerOverride;\n");
 
         var root = global.kag.menu_layer;
         root.port_hide_original = root.hide;
@@ -118,13 +144,14 @@
             if (!force && this.visible)
             {
                 var active_height = global.updatePortMenuActiveHeight(this);
-                var scale = global.Math.max(1.0, global.Math.min(
-                    this.imageWidth / 800.0, this.imageHeight / 600.0));
+                var scale = global.portMenuScale(this.window);
                 var margin = int(12 * scale + 0.5);
-                var cursor_x = this.window.primaryLayer.cursorX;
-                var cursor_y = this.window.primaryLayer.cursorY;
+                // Layer-relative cursor: exact regardless of where the menu
+                // layer is mounted inside the primary layer tree.
+                var cursor_x = this.cursorX;
+                var cursor_y = this.cursorY;
 
-                if (cursor_x >= 0 && cursor_x < this.imageWidth
+                if (cursor_x >= -margin && cursor_x < this.imageWidth + margin
                     && cursor_y >= -margin && cursor_y <= active_height + margin)
                     return;
             }
@@ -133,11 +160,34 @@
             this.menu_active_height = this.menu_active_base_height;
             return result;
         };
+        root.portHideInstalled = true;
 
+        global.portMenuStyleInstalled = true;
         global.Debug.notice("[Native] Scaled menu layer enabled.");
+        return true;
     };
 
-    global.portMenuStyleTrigger = new global.AsyncTrigger(global.installPortMenuStyle, "");
+    global.portMenuStyleRetries = 0;
+    global.portMenuStyleGaveUp = false;
+    global.tryInstallPortMenuStyle = function()
+    {
+        if (global.installPortMenuStyle())
+            return;
+        if (global.portMenuStyleGaveUp === true)
+            return;
+        global.portMenuStyleRetries += 1;
+        if (global.portMenuStyleRetries > 10)
+        {
+            global.Debug.notice("[Native] Menu layer class is unavailable; using upstream layout.");
+            global.portMenuStyleGaveUp = true;
+            return;
+        }
+        // Menu system not built yet at first event flush; re-arm and try
+        // again on the next flush instead of silently giving up.
+        global.portMenuStyleTrigger.trigger();
+    };
+
+    global.portMenuStyleTrigger = new global.AsyncTrigger(global.tryInstallPortMenuStyle, "");
     global.portMenuStyleTrigger.trigger();
 
     global.installPortRouteIcons = function()
@@ -157,14 +207,19 @@
         if (basepath.charAt(basepath.length - 1) !== "/")
             basepath += "/";
         global.portIconBasePath = basepath;
+        global.portIconCurrentRoute = void;
 
         global.setRouteIcon = function(route)
         {
             var icon_route = route === global.commonRoute ? global.fateRoute : route;
             if (icon_route === global.fateRoute)
                 icon_route = "FATE";
+            if (icon_route === global.portIconCurrentRoute)
+                return; // already showing this route
             var icon_path = global.portIconBasePath + "linux/icon_" + icon_route + ".bmp";
-            if (!global.System.setApplicationIcon(icon_path))
+            if (global.System.setApplicationIcon(icon_path))
+                global.portIconCurrentRoute = icon_route;
+            else
                 global.Debug.notice("[Native] Cannot load window icon: " + icon_path);
         };
 
@@ -191,12 +246,27 @@
     ];
 
     global.Window.exSystemMenu = void;
-    global.Plugins.link_port_original = global.Plugins.link;
+    var hooked_state = typeof(global.portLinkHooked);
+    if (hooked_state === "undefined" || hooked_state === "void")
+    {
+        global.Plugins.link_port_original = global.Plugins.link;
+        global.portLinkHooked = true;
+    }
     global.Plugins.link = function(storage)
     {
         if (global.Plugins.port_native_plugins[storage] === true)
         {
-            var result = global.Plugins.link_port_original(storage);
+            var result;
+            try
+            {
+                result = global.Plugins.link_port_original(storage);
+            }
+            catch(e)
+            {
+                global.Debug.notice("[Native] Native plugin failed to load: "
+                    + storage + " (" + e.message + ")");
+                return false;
+            }
             global.Debug.notice("[Native] Native plugin loaded: " + storage);
             return result;
         }
@@ -206,4 +276,4 @@
     };
 
     global.Plugins.link("krglhwebp.dll");
-})()
+})();
