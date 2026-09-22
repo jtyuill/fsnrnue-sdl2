@@ -1,11 +1,10 @@
-#!/bin/sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
 
-repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+repo_dir=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd -P)
 build_dir=${BUILD_DIR:-"$repo_dir/.build"}
 download_dir="$build_dir/macos-runtime-downloads"
 runtime_dir="$repo_dir/Port/runtime-macos"
-staging_dir="$download_dir/staging.$$"
 
 fail() {
     printf 'fetch-runtime-macos: %s\n' "$*" >&2
@@ -22,27 +21,30 @@ for command_name in curl ditto install shasum lipo; do
     command -v "$command_name" >/dev/null 2>&1 || fail "required command not found: $command_name"
 done
 
-cleanup() {
-    rm -rf "$staging_dir"
-}
-trap cleanup EXIT HUP INT TERM
+mkdir -p -- "$download_dir"
+staging_dir=$(mktemp -d "$download_dir/staging.XXXXXX")
 
-mkdir -p "$download_dir" "$staging_dir/archives" "$staging_dir/extracted" "$staging_dir/runtime-macos/plugin"
+cleanup() {
+    rm -rf -- "$staging_dir"
+}
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+mkdir -p "$staging_dir/archives" "$staging_dir/extracted" "$staging_dir/runtime-macos/plugin"
 
 verify_sha256() {
-    expected=$1
-    path=$2
+    local expected=$1 path=$2 output actual
     output=$(shasum -a 256 "$path") || fail "could not hash $path"
     actual=${output%% *}
     [ "$actual" = "$expected" ] || fail "checksum mismatch for $(basename -- "$path"): expected $expected, got $actual"
 }
 
 download_archive() {
-    name=$1
-    url=$2
-    expected=$3
-    destination="$download_dir/$name"
-    temporary="$staging_dir/archives/$name"
+    local name=$1 url=$2 expected=$3
+    local destination="$download_dir/$name"
+    local temporary="$staging_dir/archives/$name"
 
     log "downloading $name"
     curl -fL --retry 3 --output "$temporary" "$url" || fail "download failed for $url"
@@ -51,14 +53,14 @@ download_archive() {
 }
 
 extract_archive() {
-    name=$1
-    destination="$staging_dir/extracted/$name"
+    local name=$1
+    local destination="$staging_dir/extracted/$name"
     mkdir -p "$destination"
-    ditto -x -k "$download_dir/$name" "$destination" || fail "could not extract $name"
+    ditto -x -k "$staging_dir/archives/$name" "$destination" || fail "could not extract $name"
 }
 
 verify_universal() {
-    path=$1
+    local path=$1 archs
     archs=$(lipo -archs "$path") || fail "could not inspect architectures for $path"
     case " $archs " in
         *" x86_64 "*) ;;

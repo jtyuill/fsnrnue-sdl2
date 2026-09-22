@@ -22,6 +22,7 @@ Run it on an x86-64 Linux system with these commands available:
 - `pkg-config` and NASM
 - C and C++ compilers exposed as `cc` and `c++`
 - POSIX `install`
+- `patchelf`
 - the development libraries required by the pinned Kirikiri SDL2 source and
   its submodules
 
@@ -33,13 +34,14 @@ From the repository root:
 
 The script:
 
-1. clones Kirikiri SDL2 and its submodules into `.build/krkrsdl2/` when no
-   checkout exists;
+1. clones Kirikiri SDL2 into `.build/krkrsdl2/` without checking out an
+   unpinned revision when no checkout exists;
 2. fetches and checks out the exact commit recorded in the script;
 3. updates all pinned submodules;
 4. applies `patches/krkrsdl2-window-icon.patch` if it is not already applied;
 5. configures a Release build in `.build/krkrsdl2-build/` with Ninja; and
-6. installs the resulting executable as `runtime/krkrsdl2`.
+6. packages the executable with `/lib64/ld-linux-x86-64.so.2` as its loader
+   and no build-host RPATH/RUNPATH, then installs it as `runtime/krkrsdl2`.
 
 Use a different ignored work directory without changing the script:
 
@@ -56,7 +58,10 @@ KRKRSDL2_REPO_URL=https://example.invalid/krkrsdl2.git \
 ```
 
 The source revision is pinned, but the compiler and system libraries are not.
-Before committing a rebuilt executable:
+Build distribution binaries against the oldest supported system: normalizing
+the loader and search paths does not lower required glibc/libstdc++ symbol
+versions. The bundled build's environment and ABI requirements are recorded in
+`THIRD-PARTY-NOTICES.md`. Before committing a rebuilt executable:
 
 - inspect its architecture, dynamic dependencies, required symbol versions,
   and runtime search paths;
@@ -96,14 +101,21 @@ From the repository root:
 
 The script:
 
-1. downloads the engine and plugin archives into
-   `.build/macos-runtime-downloads/`;
+1. downloads the engine and plugin archives into a unique staging directory
+   under `.build/macos-runtime-downloads/`;
 2. rejects every archive whose SHA-256 does not match the value embedded in
    the script;
-3. stages the selected engine and plugin files;
+3. extracts the verified staged archives, independently of the shared download
+   cache, and stages the selected engine and plugin files;
 4. verifies the SHA-256 of every staged runtime artifact;
 5. requires both `arm64` and `x86_64` slices in every artifact; and
 6. installs the verified files under `runtime-macos/`.
+
+Staging is removed on success, failure, or interruption. The rolling upstream
+release URLs can change: if an archive no longer matches its pin, the script
+must fail rather than install the new release. This does not affect normal
+installation from the checked-in runtime. Do not replace a checksum simply
+to bypass a mismatch; verify source provenance and launch compatibility first.
 
 Use another ignored download and staging directory with `BUILD_DIR`:
 

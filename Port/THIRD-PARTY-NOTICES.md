@@ -13,7 +13,13 @@ below are native engine/plugin code and are not owned by TYPE-MOON.
 
 - Local change: `patches/krkrsdl2-window-icon.patch`
 - Bundled `runtime/krkrsdl2` SHA-256:
-  `0ef8994391369589487d881e6566ec5df3d3bcafdd0260a6a1ae6fc052c5140b`
+  `3fe34d6862a9d4cb9863309b8e75175663be2b207d63dde9882b73b56abe490f`
+- Rebuilt with `build-engine.sh` on Ubuntu 24.04, GCC 13.3.0
+  (`13.3.0-6ubuntu2~24.04.1`), glibc 2.39 (`2.39-0ubuntu8.9`),
+  and patchelf 0.18.0.
+- Build container base: `ubuntu@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea`.
+- ELF interpreter: `/lib64/ld-linux-x86-64.so.2`; no RPATH/RUNPATH.
+- Required ABI includes `GLIBC_2.38` and `GLIBCXX_3.4.32`.
 
 ### macOS official artifact
 
@@ -79,6 +85,12 @@ metadata string copies local; that entry point runs outside `V2Link`, so the
 upstream `TJS_str*` import stubs have no initialized function exporter. The
 fetcher verifies the official archive member and preserves only this
 hash-verified rebuild.
+
+The checked-in engine declares macOS 10.14 for Intel and 11.0 for Apple
+Silicon; the official plugins declare macOS 14.0. The local `wutcwf.so`
+rebuild declares macOS 26.0 for both architectures, making **macOS 26** the
+minimum for this complete bundled runtime. The installer and Finder wrapper
+use that minimum, not the engine-only deployment target.
 
 Plugin repositories do not all expose a machine-detected SPDX license. Their
 upstream notices and source govern those binaries; this project's `LICENSE`

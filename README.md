@@ -10,7 +10,7 @@ configuration, or save data.
 
 The game should work identical to the Windows binary, however videos are currently broken on both Linux and macOS.
 
-This project does not mess with existing game files at all, though it is good practice to back up your saves just in case.
+The installers leave existing game data and saves untouched. Running the game updates its configuration and saves normally, so keep backups.
 
 **This project is in its infancy**, and there will be some issues. Please contribute by opening an issue or PR!
 
@@ -30,7 +30,9 @@ game window, with sizing adjusted for the current window scale.
 ## Requirements
 
 - An existing Ultimate Edition installation containing `patch.xp3`, `data.xp3`, `etc.xp3`, `rule.xp3`, `Fate.exe` or `Fate64.exe`, and the three `icon_*.ico` files.
-- Any modern version of Linux and macOS
+- **Linux:** x86-64, glibc 2.38 or newer, and a `libstdc++.so.6` providing `GLIBCXX_3.4.32` (for example, Ubuntu 24.04 or Debian 13). A graphical desktop and system fonts are required.
+- **Linux installation:** ImageMagick 7's `magick` command.
+- **macOS:** macOS 26 or newer on Apple Silicon or Intel. The bundled `wutcwf.so` determines this minimum; the engine alone supports older versions.
 - **Note: Intel Mac is currently untested but should work. Please open an issue if you are experiencing problems.**
 
 ## Install using Ultimate Edition as the base
@@ -49,9 +51,13 @@ cd fsnrnue-sdl2
 The Linux installer:
 
 1. validates that the target looks like an Ultimate Edition installation;
-2. copies only this repository's native runtime, plugins, launcher, and
-   compatibility overlay into `linux/` under the game directory;
+2. installs the native runtime, plugins, compatibility overlay, and generated
+   route icons under `linux/`, with `FateLinux.sh` beside the game archives;
 3. leaves every game archive and the existing save directory untouched.
+
+All route icons are converted before replacing installed runtime files. Both
+installers reject symlinked runtime destinations and directory/file collisions
+rather than risk writing through them into game data.
 
 Play from any working directory:
 
@@ -97,13 +103,34 @@ open "$HOME/FSNRNUE114/FateMac.app" --args -forcelog -window
 ```
 
 Re-run `install-mac.sh` after updating the checkout. It idempotently replaces
-only its own launcher, `macos/` runtime files, and `FateMac.app`.
+only its own launcher, `macos/` runtime files, and generated files inside
+`FateMac.app`; unrelated bundle contents are preserved.
 
 On first launch, Ultimate Edition prompts for the save location. Canceling that
 prompt keeps `faterealtanua_savedata/` beside the game archives. The resulting
 per-install `config.ksc` is not part of a fresh Ultimate Edition installation
 and is not required by either platform installer.
 
+
+## Maintenance and checks
+
+See [`Port/README.md`](Port/README.md) for rebuilding the Linux engine and
+refreshing pinned macOS artifacts. Normal installation uses the checked-in
+runtime and does not require a build or download.
+
+Run the regression tests on a supported native platform with Python 3 and that
+platform's installer prerequisites:
+
+```sh
+python3 -m unittest discover -s tests -v
+bash -n install-linux.sh install-mac.sh FateLinux.sh FateMac.sh \
+  Port/build-engine.sh Port/fetch-runtime-macos.sh
+```
+
+The tests generate their own installer fixtures and exercise the bundled TJS
+engine without proprietary game data. They cover data preservation, repeated
+installation, unsafe destinations, failed icon conversion, caption formatting,
+and missing native plugins. They do not replace a graphical game smoke test.
 
 ## Legal
 

@@ -18,7 +18,10 @@
             return caption;
 
         return caption.replace(/\s*\(&[^)]*\)/g, "")
-            .replace(/&/g, "")
+            .replace(/&&|&/g, function(matches)
+            {
+                return matches[0] === "&&" ? "&" : "";
+            })
             .replace(/\s+/g, " ")
             .trim();
     };
@@ -160,7 +163,6 @@
             this.menu_active_height = this.menu_active_base_height;
             return result;
         };
-        root.portHideInstalled = true;
 
         global.portMenuStyleInstalled = true;
         global.Debug.notice("[Native] Scaled menu layer enabled.");
@@ -246,6 +248,9 @@
     ];
 
     global.Window.exSystemMenu = void;
+    // windowEx cannot report maximized state on SDL. Declare it unavailable,
+    // rather than leaving UE's unguarded limitSize() read as a missing member.
+    global.Window.maximized = void;
     var hooked_state = typeof(global.portLinkHooked);
     if (hooked_state === "undefined" || hooked_state === "void")
     {
@@ -265,7 +270,7 @@
             {
                 global.Debug.notice("[Native] Native plugin failed to load: "
                     + storage + " (" + e.message + ")");
-                return false;
+                throw e;
             }
             global.Debug.notice("[Native] Native plugin loaded: " + storage);
             return result;

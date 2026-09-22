@@ -3,7 +3,7 @@
 # Ultimate Edition copy. No game data is copied into this repository.
 set -euo pipefail
 
-repo_dir=$(cd "$(dirname "$0")" && pwd -P)
+repo_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)
 port_dir="$repo_dir/Port"
 
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
@@ -12,11 +12,15 @@ log() { printf '==> %s\n' "$*"; }
 [[ $(uname -s) == Darwin ]] || die "this installer requires macOS"
 [[ $# -eq 1 ]] || die "usage: $0 /path/to/FSNRNUE114"
 [[ -d "$1" ]] || die "game directory does not exist: $1"
-game_dir=$(cd "$1" && pwd -P)
+game_dir=$(CDPATH='' cd -- "$1" && pwd -P)
 
-for command_name in install sips iconutil; do
+for command_name in install sips iconutil sw_vers; do
     command -v "$command_name" >/dev/null 2>&1 || die "missing required command: $command_name"
 done
+
+macos_version=$(sw_vers -productVersion)
+[[ ${macos_version%%.*} -ge 26 ]] \
+    || die "the bundled wutcwf.so requires macOS 26 or later (found $macos_version)"
 
 for required in patch.xp3 data.xp3 etc.xp3 rule.xp3 \
     icon_FATE.ico icon_UBW.ico icon_HF.ico; do
@@ -32,11 +36,22 @@ for required in FateMac.sh Port/settings.tjs Port/runtime-macos/krkrsdl2 \
     Port/runtime-macos/plugin/wuvorbis.so; do
     [[ -f "$repo_dir/$required" ]] || die "port checkout is incomplete: $required"
 done
-[[ -x "$repo_dir/FateMac.sh" ]] || die "port checkout launcher is not executable: FateMac.sh"
-[[ -x "$port_dir/runtime-macos/krkrsdl2" ]] || die "port checkout runtime is not executable: Port/runtime-macos/krkrsdl2"
-for plugin in extrans fstat krglhwebp wutcwf wuvorbis; do
-    [[ -x "$port_dir/runtime-macos/plugin/$plugin.so" ]] \
-        || die "port checkout plugin is not executable: Port/runtime-macos/plugin/$plugin.so"
+
+# Preserve unrelated bundle contents and reject paths that redirect writes.
+for directory in macos macos/plugin FateMac.app FateMac.app/Contents \
+    FateMac.app/Contents/MacOS FateMac.app/Contents/Resources; do
+    destination="$game_dir/$directory"
+    [[ ! -L "$destination" && ( ! -e "$destination" || -d "$destination" ) ]] \
+        || die "runtime directory is not a plain directory: $destination"
+done
+for file in FateMac.sh macos/krkrsdl2 macos/settings.tjs \
+    macos/plugin/extrans.so macos/plugin/fstat.so macos/plugin/krglhwebp.so \
+    macos/plugin/wutcwf.so macos/plugin/wuvorbis.so \
+    FateMac.app/Contents/MacOS/FateMac FateMac.app/Contents/Info.plist \
+    FateMac.app/Contents/Resources/FateMac.icns; do
+    destination="$game_dir/$file"
+    [[ ! -L "$destination" && ( ! -e "$destination" || -f "$destination" ) ]] \
+        || die "runtime destination is not a plain file: $destination"
 done
 
 icon_properties=$(sips -g pixelWidth -g pixelHeight "$game_dir/icon_FATE.ico" 2>/dev/null) \
@@ -48,9 +63,12 @@ icon_properties=$(sips -g pixelWidth -g pixelHeight "$game_dir/icon_FATE.ico" 2>
 temp_dir=$(mktemp -d "${TMPDIR:-/tmp}/FateMac-install.XXXXXX") \
     || die "could not create installer temporary directory"
 cleanup() {
-    rm -rf "$temp_dir"
+    rm -rf -- "$temp_dir"
 }
-trap cleanup EXIT HUP INT TERM
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 staged_app="$temp_dir/FateMac.app"
 iconset_dir="$temp_dir/FateMac.iconset"
@@ -58,10 +76,10 @@ source_icon="$temp_dir/FateMac-64.png"
 install -d -m 0755 "$staged_app/Contents/MacOS" "$staged_app/Contents/Resources" "$iconset_dir"
 
 cat >"$staged_app/Contents/MacOS/FateMac" <<'WRAPPER'
-#!/bin/sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
 
-game_dir=$(CDPATH= cd -- "$(dirname -- "$0")/../../.." && pwd -P)
+game_dir=$(CDPATH='' cd -- "$(dirname -- "$0")/../../.." && pwd -P)
 exec "$game_dir/FateMac.sh" "$@"
 WRAPPER
 chmod 0755 "$staged_app/Contents/MacOS/FateMac"
@@ -84,7 +102,7 @@ cat >"$staged_app/Contents/Info.plist" <<'PLIST'
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>
-    <string>10.14</string>
+    <string>26.0</string>
     <key>NSHighResolutionCapable</key>
     <true/>
 </dict>
@@ -131,8 +149,10 @@ for plugin in extrans fstat krglhwebp wutcwf wuvorbis; do
     install -m 0755 "$port_dir/runtime-macos/plugin/$plugin.so" "$game_dir/macos/plugin/$plugin.so"
 done
 
-rm -rf "$game_dir/FateMac.app"
-mv "$staged_app" "$game_dir/FateMac.app"
+install -d -m 0755 "$game_dir/FateMac.app/Contents/MacOS" "$game_dir/FateMac.app/Contents/Resources"
+install -m 0755 "$staged_app/Contents/MacOS/FateMac" "$game_dir/FateMac.app/Contents/MacOS/FateMac"
+install -m 0644 "$staged_app/Contents/Info.plist" "$game_dir/FateMac.app/Contents/Info.plist"
+install -m 0644 "$staged_app/Contents/Resources/FateMac.icns" "$game_dir/FateMac.app/Contents/Resources/FateMac.icns"
 
 cat <<EOF
 

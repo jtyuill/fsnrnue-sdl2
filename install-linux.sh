@@ -3,7 +3,7 @@
 # Ultimate Edition directory. No game data is copied into this repository.
 set -euo pipefail
 
-repo_dir=$(cd "$(dirname "$0")" && pwd)
+repo_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)
 port_dir="$repo_dir/Port"
 
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
@@ -11,7 +11,7 @@ log() { printf '==> %s\n' "$*"; }
 
 [[ $# -eq 1 ]] || die "usage: $0 /path/to/FSNRNUE"
 [[ -d "$1" ]] || die "game directory does not exist: $1"
-game_dir=$(cd "$1" && pwd -P)
+game_dir=$(CDPATH='' cd -- "$1" && pwd -P)
 
 for command_name in install magick; do
     command -v "$command_name" >/dev/null 2>&1 || die "missing required command: $command_name"
@@ -32,6 +32,34 @@ for required in FateLinux.sh Port/settings.tjs Port/runtime/krkrsdl2 \
     [[ -f "$repo_dir/$required" ]] || die "port checkout is incomplete: $required"
 done
 
+# Refuse redirected destinations before writing anything into the game tree.
+for directory in linux linux/plugin; do
+    destination="$game_dir/$directory"
+    [[ ! -L "$destination" && ( ! -e "$destination" || -d "$destination" ) ]] \
+        || die "runtime directory is not a plain directory: $destination"
+done
+for file in FateLinux.sh linux/krkrsdl2 linux/settings.tjs \
+    linux/plugin/extrans.so linux/plugin/fstat.so linux/plugin/krglhwebp.so \
+    linux/plugin/wutcwf.so linux/plugin/wuvorbis.so \
+    linux/icon_FATE.bmp linux/icon_UBW.bmp linux/icon_HF.bmp; do
+    destination="$game_dir/$file"
+    [[ ! -L "$destination" && ( ! -e "$destination" || -f "$destination" ) ]] \
+        || die "runtime destination is not a plain file: $destination"
+done
+
+temp_dir=$(mktemp -d "${TMPDIR:-/tmp}/FateLinux-install.XXXXXX")
+cleanup() { rm -rf -- "$temp_dir"; }
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+log "Deriving route icons from your Ultimate Edition copy"
+for route in FATE UBW HF; do
+    magick "$game_dir/icon_${route}.ico[3]" \
+        -define bmp:format=bmp4 "$temp_dir/icon_${route}.bmp"
+done
+
 log "Installing native runtime into $game_dir"
 install -d "$game_dir/linux/plugin"
 install -m 0755 "$repo_dir/FateLinux.sh" "$game_dir/FateLinux.sh"
@@ -41,10 +69,8 @@ for plugin in extrans fstat krglhwebp wutcwf wuvorbis; do
     install -m 0755 "$port_dir/runtime/plugin/$plugin.so" "$game_dir/linux/plugin/$plugin.so"
 done
 
-log "Deriving route icons from your Ultimate Edition copy"
 for route in FATE UBW HF; do
-    magick "$game_dir/icon_${route}.ico[3]" \
-        -define bmp:format=bmp4 "$game_dir/linux/icon_${route}.bmp"
+    install -m 0644 "$temp_dir/icon_${route}.bmp" "$game_dir/linux/icon_${route}.bmp"
 done
 
 cat <<EOF

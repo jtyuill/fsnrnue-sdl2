@@ -37,3 +37,4 @@ linux/icon_*.bmp
 excepted/
 .DS_Store
 *~
+__pycache__/

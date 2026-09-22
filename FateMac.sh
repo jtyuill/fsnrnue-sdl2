@@ -1,11 +1,11 @@
-#!/bin/sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
 
 case $0 in
     /*) launcher=$0 ;;
     *) launcher=$PWD/$0 ;;
 esac
-game_dir=$(CDPATH= cd -- "$(dirname -- "$launcher")" && pwd -P)
+game_dir=$(CDPATH='' cd -- "$(dirname -- "$launcher")" && pwd -P)
 runtime_dir="$game_dir/macos"
 engine="$runtime_dir/krkrsdl2"
 
